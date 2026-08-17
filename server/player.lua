@@ -1,5 +1,17 @@
 local Requests = {}
 
+local function playerActionAllowed(source, action)
+  local ok, allowed, result = pcall(function()
+    return exports['mz_core']:CanPlayerPerformAction(source, action)
+  end)
+  return ok and allowed == true and type(result) == 'table' and result.allowed == true
+end
+
+local function blockedUnlessAllowed(source, action)
+  if playerActionAllowed(source, action) then return nil end
+  return { ok = false, error = 'player_state_blocked' }
+end
+
 local function safePlacementCall(operation, callback, ...)
   local callOk, ok, result = pcall(callback, ...)
   if not callOk then
@@ -46,6 +58,8 @@ local function rateAllowed(source, action, seconds)
 end
 
 lib.callback.register('mz_furniture:server:open', function(source)
+  local blocked = blockedUnlessAllowed(source, 'shop.use')
+  if blocked then return blocked end
   if not rateAllowed(source, 'open', 1) then return { ok = false, error = 'rate_limited' } end
   local ok, result = MZFurniturePurchase.Open(source)
   if ok and type(result) == 'table' then
@@ -59,6 +73,8 @@ lib.callback.register('mz_furniture:server:open', function(source)
 end)
 
 lib.callback.register('mz_furniture:server:openOrganizationWarehouse', function(source, orgCode)
+  local blocked = blockedUnlessAllowed(source, 'shop.use')
+  if blocked then return blocked end
   if not rateAllowed(source, 'organization_warehouse', 2) then
     return { ok = false, error = 'rate_limited' }
   end
@@ -70,6 +86,8 @@ lib.callback.register('mz_furniture:server:createOrganizationQuote', function(
   orgCode,
   catalogId
 )
+  local blocked = blockedUnlessAllowed(source, 'shop.use')
+  if blocked then return blocked end
   if not rateAllowed(source, 'organization_quote', 1) then
     return { ok = false, error = 'rate_limited' }
   end
@@ -83,6 +101,8 @@ lib.callback.register('mz_furniture:server:createOrganizationQuote', function(
 end)
 
 lib.callback.register('mz_furniture:server:purchaseForOrganization', function(source, quoteToken)
+  local blocked = blockedUnlessAllowed(source, 'shop.use')
+  if blocked then return blocked end
   local cooldown = math.max(
     1,
     math.floor(tonumber(MZFurnitureConfig.PurchaseRateLimitSeconds) or 2)
@@ -99,12 +119,16 @@ lib.callback.register('mz_furniture:server:purchaseForOrganization', function(so
 end)
 
 lib.callback.register('mz_furniture:server:createQuote', function(source, catalogId)
+  local blocked = blockedUnlessAllowed(source, 'shop.use')
+  if blocked then return blocked end
   if not rateAllowed(source, 'quote', 1) then return { ok = false, error = 'rate_limited' } end
   local ok, result = MZFurniturePurchase.CreateQuote(source, catalogId)
   return ok and { ok = true, data = result } or { ok = false, error = result }
 end)
 
 lib.callback.register('mz_furniture:server:purchase', function(source, quoteToken)
+  local blocked = blockedUnlessAllowed(source, 'shop.use')
+  if blocked then return blocked end
   local cooldown = math.max(1, math.floor(tonumber(MZFurnitureConfig.PurchaseRateLimitSeconds) or 2))
   if not rateAllowed(source, 'purchase', cooldown) then return { ok = false, error = 'rate_limited' } end
   local ok, result = MZFurniturePurchase.Purchase(source, quoteToken)
@@ -112,6 +136,8 @@ lib.callback.register('mz_furniture:server:purchase', function(source, quoteToke
 end)
 
 lib.callback.register('mz_furniture:server:createResaleQuote', function(source, ownedFurnitureId)
+  local blocked = blockedUnlessAllowed(source, 'shop.use')
+  if blocked then return blocked end
   if not rateAllowed(source, 'resale_quote', 1) then
     return { ok = false, error = 'rate_limited' }
   end
@@ -124,6 +150,8 @@ lib.callback.register('mz_furniture:server:createResaleQuote', function(source, 
 end)
 
 lib.callback.register('mz_furniture:server:resale', function(source, quoteToken)
+  local blocked = blockedUnlessAllowed(source, 'shop.use')
+  if blocked then return blocked end
   local cooldown = math.max(1, math.floor(tonumber(MZFurnitureConfig.PurchaseRateLimitSeconds) or 2))
   if not rateAllowed(source, 'resale', cooldown) then
     return { ok = false, error = 'rate_limited' }
@@ -132,6 +160,8 @@ lib.callback.register('mz_furniture:server:resale', function(source, quoteToken)
 end)
 
 lib.callback.register('mz_furniture:server:placementSnapshot', function(source)
+  local blocked = blockedUnlessAllowed(source, 'property.use')
+  if blocked then return blocked end
   if not rateAllowed(source, 'placement_snapshot', 1) then
     return { ok = false, error = 'rate_limited' }
   end
@@ -139,6 +169,8 @@ lib.callback.register('mz_furniture:server:placementSnapshot', function(source)
 end)
 
 lib.callback.register('mz_furniture:server:beginPlacement', function(source, action, ownedFurnitureId)
+  local blocked = blockedUnlessAllowed(source, 'property.use')
+  if blocked then return blocked end
   local cooldown = math.max(
     1,
     math.floor(tonumber(MZFurnitureConfig.PlacementRateLimitSeconds) or 1)
@@ -161,6 +193,8 @@ lib.callback.register('mz_furniture:server:submitPlacement', function(
   offset,
   rotation
 )
+  local blocked = blockedUnlessAllowed(source, 'property.use')
+  if blocked then return blocked end
   return safePlacementCall(
     'submit',
     MZFurniturePlacement.Submit,
@@ -177,6 +211,8 @@ lib.callback.register('mz_furniture:server:storeFurniture', function(
   ownedRevision,
   placementRevision
 )
+  local blocked = blockedUnlessAllowed(source, 'property.use')
+  if blocked then return blocked end
   if not rateAllowed(source, 'store_furniture', 1) then
     return { ok = false, error = 'rate_limited' }
   end
