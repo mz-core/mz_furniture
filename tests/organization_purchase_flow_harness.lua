@@ -21,7 +21,7 @@ local grantFails = false
 local ambiguousAfterDebit = { [5] = true }
 
 function GetPlayerName(source) return balances[source] and ('Player %s'):format(source) or nil end
-function GetResourceState(resource) return resource == 'mz_core' and 'started' or 'missing' end
+function GetResourceState(resource) return (resource == 'mz_core' or resource == 'mz_org') and 'started' or 'missing' end
 function AddEventHandler() end
 
 exports = {
@@ -29,6 +29,9 @@ exports = {
     ResolvePlayerIdentity = function(_, source)
       return { ok = true, citizenid = ('CID-%s'):format(source) }
     end,
+    CreateDetailedLog = function() return true end
+  },
+  mz_org = {
     GetOrgAccountCommerceCapabilities = function()
       return {
         ready = true, spend = true, refund = true, idempotent = true, receipt = true,
@@ -66,8 +69,7 @@ exports = {
       local receipt = { receiptId = ('refund-%s'):format(source), amount = original.amount }
       refunds[options.operationKey] = receipt
       return true, receipt
-    end,
-    CreateDetailedLog = function() return true end
+    end
   }
 }
 

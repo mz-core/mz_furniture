@@ -41,6 +41,8 @@ dependencies {
   'oxmysql',
   'ox_lib',
   'mz_core',
+  'mz_economy',
+  'mz_org',
   'mz_interiors',
   'mz_houses',
   'mz_menu',

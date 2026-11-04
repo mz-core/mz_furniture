@@ -25,7 +25,7 @@ local function normalizeOrgCode(value)
 end
 
 local function activeMembership(source, orgCode)
-  local memberships, membershipsErr = resourceExport('mz_core', 'GetPlayerOrgContext', source)
+  local memberships, membershipsErr = resourceExport('mz_org', 'GetPlayerOrgContext', source)
   if type(memberships) ~= 'table' then return nil, membershipsErr or 'organization_service_unavailable' end
   for _, membership in ipairs(memberships) do
     local code = normalizeOrgCode(membership.code)
@@ -38,7 +38,7 @@ end
 
 local function hasCapability(source, orgCode, capability)
   local allowed, allowedErr = resourceExport(
-    'mz_core',
+    'mz_org',
     'CanOrg',
     source,
     orgCode,
@@ -129,7 +129,7 @@ function MZFurnitureOrganization.ListContexts(source)
     or MZFurnitureConfig.OrganizationWarehouseReadEnabled ~= true then return {} end
   local migration = MZFurnitureDB.GetOwnerMigrationStatus()
   if migration.ready ~= true then return {} end
-  local memberships = resourceExport('mz_core', 'GetPlayerOrgContext', source)
+  local memberships = resourceExport('mz_org', 'GetPlayerOrgContext', source)
   if type(memberships) ~= 'table' then return {} end
   local result, seen = {}, {}
   for _, membership in ipairs(memberships) do

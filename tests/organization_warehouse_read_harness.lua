@@ -11,11 +11,17 @@ local deniedLogs = 0
 
 function GetPlayerName(source) return source == 1 and 'Mafia Member' or nil end
 function GetResourceState(resource)
-  return ({ mz_core = true, mz_org_activities = true })[resource] and 'started' or 'missing'
+  return ({ mz_org = true, mz_org_activities = true, mz_core = true })[resource] and 'started' or 'missing'
 end
 
 exports = {
   mz_core = {
+    CreateDetailedLog = function(_, _, action)
+      if action == 'organization_warehouse_read_denied' then deniedLogs = deniedLogs + 1 end
+      return true
+    end
+  },
+  mz_org = {
     GetPlayerOrgContext = function(_, source)
       if source ~= 1 then return {} end
       return {
@@ -25,10 +31,6 @@ exports = {
     CanOrg = function(_, source, orgCode, capability)
       return capabilityAllowed and source == 1 and orgCode == 'mafia'
         and capability == 'facility.furniture.view'
-    end,
-    CreateDetailedLog = function(_, _, action)
-      if action == 'organization_warehouse_read_denied' then deniedLogs = deniedLogs + 1 end
-      return true
     end
   },
   mz_org_activities = {

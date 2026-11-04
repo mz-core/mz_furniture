@@ -16,7 +16,7 @@ local organizationPurchase = read('mz_furniture/server/organization_purchase.lua
 local player = read('mz_furniture/server/player.lua')
 local menu = read('mz_furniture/client/menu.lua')
 local orgCapabilities = read('mz_org/shared/capabilities.lua')
-local coreSeed = read('mz_core/server/seed/default_orgs.lua')
+local orgSeed = read('mz_org/server/domain/default_orgs.lua')
 local activitiesConfig = read('mz_org_activities/shared/config.lua')
 local activitiesService = read('mz_org_activities/server/facility_service.lua')
 local activitiesMain = read('mz_org_activities/server/main.lua')
@@ -69,7 +69,7 @@ expect(menu:find("action == 'organizationWarehouse'", 1, true)
   'read-only organization warehouse menu is missing')
 expect(orgCapabilities:find("'facility.furniture.view'", 1, true),
   'organization furniture read capability is not registered')
-expect(coreSeed:find("'facility.furniture.view'", 1, true),
+expect(orgSeed:find("'facility.furniture.view'", 1, true),
   'mafia seed does not grant the read capability')
 expect(activitiesConfig:find('OrgFurnitureReadEnabled = true', 1, true)
   and activitiesConfig:find('OrgFurnitureEnabled = false', 1, true),

@@ -26,9 +26,9 @@ local function metadata(action, requestId, catalogId, transactionId)
 end
 
 local function operationResult(source, key, operation)
-  if GetResourceState('mz_core') ~= 'started' then return nil, 'core_unavailable' end
+  if GetResourceState('mz_economy') ~= 'started' then return nil, 'economy_unavailable' end
   local callOk, result = pcall(function()
-    return exports['mz_core']:GetOperationResult(source, key, operation)
+    return exports['mz_economy']:GetOperationResult(source, key, operation)
   end)
   if not callOk or type(result) ~= 'table' then return nil, 'operation_lookup_failed' end
   if result.ok == true and result.found == true and type(result.result) == 'table'
@@ -43,8 +43,8 @@ local function operationResult(source, key, operation)
 end
 
 function MZFurnitureMoney.GetBalance(source)
-  if GetResourceState('mz_core') ~= 'started' then return nil, 'core_unavailable' end
-  local callOk, money = pcall(function() return exports['mz_core']:GetMoney(source) end)
+  if GetResourceState('mz_economy') ~= 'started' then return nil, 'economy_unavailable' end
+  local callOk, money = pcall(function() return exports['mz_economy']:GetMoney(source) end)
   if not callOk or type(money) ~= 'table' then return nil, 'money_lookup_failed' end
   return math.max(0, math.floor(tonumber(money.bank) or 0))
 end
@@ -66,9 +66,9 @@ function MZFurnitureMoney.Debit(source, amount, context)
   context = type(context) == 'table' and context or {}
   local requestId = MZFurnitureLogic.NormalizePurchaseToken(context.requestId)
   if amount <= 0 or not requestId then return false, 'invalid_payment', false end
-  if GetResourceState('mz_core') ~= 'started' then return false, 'core_unavailable', false end
+  if GetResourceState('mz_economy') ~= 'started' then return false, 'economy_unavailable', false end
   local callOk, success, err = pcall(function()
-    return exports['mz_core']:RemoveMoney(source, 'bank', amount, metadata(
+    return exports['mz_economy']:RemoveMoney(source, 'bank', amount, metadata(
       'furniture_purchase',
       requestId,
       context.catalogId,
@@ -90,9 +90,9 @@ function MZFurnitureMoney.Refund(source, amount, context)
   context = type(context) == 'table' and context or {}
   local requestId = MZFurnitureLogic.NormalizePurchaseToken(context.requestId)
   if amount <= 0 or not requestId then return false, 'invalid_refund', false end
-  if GetResourceState('mz_core') ~= 'started' then return false, 'core_unavailable', true end
+  if GetResourceState('mz_economy') ~= 'started' then return false, 'economy_unavailable', true end
   local callOk, success, err = pcall(function()
-    return exports['mz_core']:AddMoney(source, 'bank', amount, metadata(
+    return exports['mz_economy']:AddMoney(source, 'bank', amount, metadata(
       'furniture_purchase_refund',
       requestId,
       context.catalogId,
@@ -114,9 +114,9 @@ function MZFurnitureMoney.CreditResale(source, amount, context)
   context = type(context) == 'table' and context or {}
   local requestId = MZFurnitureLogic.NormalizePurchaseToken(context.requestId)
   if amount <= 0 or not requestId then return false, 'invalid_resale_credit', false end
-  if GetResourceState('mz_core') ~= 'started' then return false, 'core_unavailable', true end
+  if GetResourceState('mz_economy') ~= 'started' then return false, 'economy_unavailable', true end
   local callOk, success, err = pcall(function()
-    return exports['mz_core']:AddMoney(source, 'bank', amount, metadata(
+    return exports['mz_economy']:AddMoney(source, 'bank', amount, metadata(
       'furniture_resale',
       requestId,
       context.catalogId,

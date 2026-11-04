@@ -48,7 +48,7 @@ function MZFurnitureOrganizationPurchase.IsReady()
   end
   if GetResourceState('mz_core') ~= 'started' then return false, 'core_unavailable' end
   local ok, capabilities = pcall(function()
-    return exports['mz_core']:GetOrgAccountCommerceCapabilities()
+    return exports['mz_org']:GetOrgAccountCommerceCapabilities()
   end)
   if not ok or not purposeAvailable(capabilities) then
     return false, 'org_furniture_spend_contract_unavailable'
@@ -120,7 +120,7 @@ end
 local function spend(source, transaction)
   local operationKey = 'furniture_purchase:' .. transaction.requestId
   local callOk, success, result = pcall(function()
-    return exports['mz_core']:SpendOrgAccount(
+    return exports['mz_org']:SpendOrgAccount(
       source,
       transaction.orgCode,
       transaction.amount,
@@ -144,7 +144,7 @@ local function refund(source, transaction, reason)
     return manualReview(transaction, 'org_refund_receipt_missing', { originalReason = reason })
   end
   local callOk, success, result = pcall(function()
-    return exports['mz_core']:RefundOrgAccount(
+    return exports['mz_org']:RefundOrgAccount(
       source,
       transaction.orgCode,
       transaction.spendReceiptId,
